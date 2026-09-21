@@ -3,6 +3,19 @@
 # Jev Ultrafast ⚡
 
 > [!IMPORTANT]
+> **This fork adds DeepSeek as the decision backend.** Set `DECISION_PROVIDER=deepseek` and `deepseek-flash` (DeepSeek-V4.1-Flash, thinking disabled) answers the operation + target questions in one request — enforced by system prompt or by json mode (`DEEPSEEK_OUTPUT=prompt|json`). The TYPE_TEXT helper also defaults to `deepseek-flash`.
+
+**Same agent, three decision backends, same machine and network.** Decision-step latency: 54 replayed calls per leg. Real task: Google Flights, 3 interleaved runs per leg, independently verified results (route / one-way / date / visible flights; DONE alone is not success).
+
+| Decision backend | Decision latency (median) | Real-task time (median) | Decisions/run | Verified |
+| --- | ---: | ---: | ---: | ---: |
+| Jev (`jev-1.13.0`) | **296 ms** | **15.1 s** | 22 | 2/3 |
+| `deepseek-flash` + prompt | 1,213 ms | 64.8 s | 43 | 2/3 |
+| `deepseek-flash` + json mode | 1,224 ms | 39.2 s | 28 | 2/3 |
+
+Jev is ~4× faster per decision and 2.6–4.3× faster end to end; prompt vs json mode is a wash. A general LLM also breaks the choice contract on its own: probability sums drift off 1, candidates go missing, and on 70+-element pages it slips an off-head element id about half the time — every such raw failure is recorded per call, conditioned or retried, and an invented candidate is never silently accepted. Full evidence and failure taxonomy: [benchmark-models.md](docs/benchmark-models.md) · reproduce: `uv run --env-file .env python scripts/benchmark_models.py` and `BU_CDP_URL=http://127.0.0.1:9333 uv run python scripts/compare_flights.py --rounds 3`.
+
+> [!NOTE]
 > **The Browser Use Cloud waitlist is open.** Get early access to ultrafast browser agents in the cloud.
 > **[Join the waitlist →](https://browser-use.com/ultrafast?utm_source=github&utm_medium=readme&utm_campaign=jev-ultrafast)**
 
