@@ -3,6 +3,7 @@
 import argparse
 import base64
 import json
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -13,14 +14,18 @@ GOALS = (
     "Find one-way flights from Zurich to London on September 20, 2026, for one adult in economy. "
     "Stop when matching flight options are visible. Do not select or book a flight."
 )
+TASK_DATE = "2026-09-20"  # Kept for the recorded demo; pass a future date for new runs.
 
 
-def verify(page):
+def verify(page, date=TASK_DATE):
     """Independent checks on the resulting page, not the model's DONE answer."""
     parsed = urlparse(page["url"])
     encoded = parse_qs(parsed.query).get("tfs", [""])[0]
+    day = datetime.strptime(date, "%Y-%m-%d")
+    short = day.strftime("%a, %b ") + f"{day.day}"
+    long_form = day.strftime("%A, %B ") + f"{day.day}"
     try:
-        date_in_url = b"2026-09-20" in base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4))
+        date_in_url = date.encode() in base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4))
     except ValueError:
         date_in_url = False
     actions = page["actions"]
@@ -31,9 +36,9 @@ def verify(page):
         "one_way": values.get("Change ticket type. One way") == "One way",
         "origin": values.get("Where from?") == "Zürich",
         "destination": values.get("Where to?") == "London",
-        "date": values.get("Departure") == "Sun, Sep 20",
-        "year": date_in_url or "departing 2026-09-20" in page["text"],
-        "results": bool(flights) and all("Sunday, September 20" in f for f in flights),
+        "date": values.get("Departure") == short,
+        "year": date_in_url or f"departing {date}" in page["text"],
+        "results": bool(flights) and all(long_form in f for f in flights),
     }
     return {"passed": all(checks.values()), "checks": checks, "visible_flights": flights}
 

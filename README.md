@@ -57,7 +57,7 @@ git clone https://github.com/browser-use/jev-ultrafast.git
 cd jev-ultrafast
 uv sync
 cp .env.example .env
-# Add TYPESAFE_API_KEY and TEXT_MODEL_API_KEY.
+# Add TYPESAFE_API_KEY; DEEPSEEK_API_KEY powers the deepseek provider and the text helper.
 uv run jev
 ```
 
@@ -65,7 +65,21 @@ Open **http://127.0.0.1:8766** and click **Start demo → Run automatically**. T
 
 Chrome connects through [Browser Harness](https://github.com/browser-use/browser-harness), installed by `uv sync`. Run `uv run browser-harness --doctor` if it needs connecting. Allow remote debugging in Chrome when prompted.
 
-`TEXT_MODEL_API_KEY` is an OpenRouter key in the example configuration. The current demo uses `inception/mercury-2.5` with reasoning disabled. Gemini, GLM, and DeepSeek can also use the OpenAI-compatible text helper; configure the appropriate model, endpoint, and reasoning setting.
+The text helper defaults to DeepSeek's `deepseek-flash` with thinking disabled — `DEEPSEEK_API_KEY` powers it unless `TEXT_MODEL_API_KEY` is set. Any OpenAI-compatible endpoint works: the recorded demo video used OpenRouter's `inception/mercury-2.5` with reasoning disabled, and Gemini or GLM need only the model, endpoint, and reasoning setting.
+
+## Decision model: Jev or DeepSeek
+
+The decision step also runs on DeepSeek's official `deepseek-flash` (DeepSeek-V4.1-Flash) with thinking disabled, in one `.env` line:
+
+```bash
+DECISION_PROVIDER=deepseek   # default: typesafe
+DEEPSEEK_API_KEY=sk-...
+DEEPSEEK_OUTPUT=prompt       # prompt | json (response_format json mode)
+```
+
+The contract is unchanged: one request answers the operation question and every operation-specific target question, and every choice must map to an observed element. DeepSeek answers through a System One decision prompt; text-model probabilities are conditioned (missing candidates filled, renormalized, maximum aligned with the selection) before the same validation Jev output passes, and **every raw output-format failure is recorded** (probability sums drifting off 1, missing candidates, invented ids — the last retried once, then the run stops). Use `DEEPSEEK_OUTPUT=json` for json-mode enforcement instead of prompt discipline.
+
+Measured on the decision step, all legs from the same machine and network: **Jev is ~4× faster (296 ms vs ~1.2 s median)**; prompt vs json mode on `deepseek-flash` is a wash (1,213 vs 1,224 ms median). On the **real Google Flights task** (three interleaved runs per leg, independently verified): **Jev finished in ~15 s vs ~39–65 s for DeepSeek**, with roughly half the decisions per run; each leg verified 2/3 on this network's Flights UI variant. Format-failure counts, validity, tokens, and limits are in [benchmark-models.md](docs/benchmark-models.md); reproduce the decision-step benchmark with `uv run --env-file .env python scripts/benchmark_models.py` and the real-task comparison with `scripts/dev_chrome.sh <proxy-port>` plus `BU_CDP_URL=http://127.0.0.1:9333 uv run python scripts/compare_flights.py --rounds 3`.
 
 ## Use the library
 
@@ -111,7 +125,7 @@ Every executed target is resolved from an observed node. The executor rechecks p
 | [agent.py](jev_ultrafast/agent.py) | The complete loop and text-helper handoff |
 | [snapshot.js](jev_ultrafast/snapshot.js) | Atomic DOM snapshot, indexed controls, freshness guards |
 | [browser.py](jev_ultrafast/browser.py) | Browser connection, current geometry, execution |
-| [model.py](jev_ultrafast/model.py) | Dynamic operation/target heads and text generation |
+| [model.py](jev_ultrafast/model.py) | Decision request (Jev or DeepSeek) and text generation |
 | [questions.py](jev_ultrafast/questions.py) | Model instructions |
 | [demo.py](jev_ultrafast/demo.py) | Local inspector |
 
@@ -135,7 +149,9 @@ node --check jev_ultrafast/snapshot.js
 uv build
 ```
 
-Tests are offline. `uv run python scripts/check_guards.py` checks real controls in a local browser without model calls. Live examples and recording scripts make paid API calls. `scripts/record_flights.py <new-folder>` captures original browser timestamps; `scripts/render_demo.py <recording-folder>` renders that verified run at 1× and crops out the Google account strip. Credentials and raw traces stay ignored.
+Tests are offline. `uv run python scripts/check_guards.py` checks real controls in a local browser without model calls. Live examples and recording scripts make paid API calls; `scripts/benchmark_models.py` compares decision-model latency (Jev vs `deepseek-flash`, prompt vs json mode) and writes its raw evidence to `docs/benchmark-models.json`. `scripts/record_flights.py <new-folder>` captures original browser timestamps; `scripts/render_demo.py <recording-folder>` renders that verified run at 1× and crops out the Google account strip. Credentials and raw traces stay ignored.
+
+On macOS, run `scripts/dev_chrome.sh [proxy-port]` first: it launches the dedicated automation Chrome the harness needs (the default profile's CDP is permission-blocked) and, given a local proxy port, routes Google through it plus skips the consent redirect for the Flights scenario. Then `BU_CDP_URL=http://127.0.0.1:9333 uv run jev`.
 
 ---
 

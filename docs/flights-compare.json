@@ -1,0 +1,760 @@
+{
+ "date": "2026-11-20",
+ "goal": "Find one-way flights from Zurich to London on November 20, 2026, for one adult in economy. Stop when matching flight options are visible. Do not select or book a flight.",
+ "generated": "2026-09-21T13:55:42+00:00",
+ "url": "https://www.google.com/travel/flights?hl=en",
+ "rounds": 3,
+ "interleaved": true,
+ "summary": {
+  "jev": {
+   "verified": "2/3",
+   "elapsed_ms": {
+    "median": 15098,
+    "mean": 15098,
+    "min": 13487,
+    "max": 16710
+   },
+   "decisions_per_run": {
+    "median": 22,
+    "mean": 22,
+    "min": 22,
+    "max": 23
+   },
+   "decision_latency_ms": {
+    "median": 310,
+    "mean": 456,
+    "min": 251,
+    "max": 1928
+   },
+   "text_latency_ms": {
+    "median": 800,
+    "mean": 770,
+    "min": 573,
+    "max": 907
+   },
+   "errors": []
+  },
+  "ds-prompt": {
+   "verified": "2/3",
+   "elapsed_ms": {
+    "median": 64766,
+    "mean": 64766,
+    "min": 42919,
+    "max": 86614
+   },
+   "decisions_per_run": {
+    "median": 43,
+    "mean": 43,
+    "min": 32,
+    "max": 54
+   },
+   "decision_latency_ms": {
+    "median": 1163,
+    "mean": 1222,
+    "min": 707,
+    "max": 3565
+   },
+   "text_latency_ms": {
+    "median": 667,
+    "mean": 760,
+    "min": 412,
+    "max": 2340
+   },
+   "errors": [
+    "ValueError: Text helper returned no valid field value; nothing typed."
+   ]
+  },
+  "ds-json": {
+   "verified": "2/3",
+   "elapsed_ms": {
+    "median": 39178,
+    "mean": 39178,
+    "min": 33468,
+    "max": 44888
+   },
+   "decisions_per_run": {
+    "median": 28,
+    "mean": 28,
+    "min": 24,
+    "max": 32
+   },
+   "decision_latency_ms": {
+    "median": 1155,
+    "mean": 1253,
+    "min": 819,
+    "max": 2928
+   },
+   "text_latency_ms": {
+    "median": 574,
+    "mean": 561,
+    "min": 487,
+    "max": 622
+   },
+   "errors": []
+  }
+ },
+ "runs": [
+  {
+   "leg": "jev",
+   "round": 1,
+   "started": "2026-09-21T13:50:35+00:00",
+   "elapsed_ms": 14572,
+   "status": "done",
+   "error": null,
+   "verification": {
+    "passed": false,
+    "checks": {
+     "search_page": true,
+     "one_way": false,
+     "origin": false,
+     "destination": false,
+     "date": false,
+     "year": true,
+     "results": true
+    },
+    "visible_flights": [
+     "From 74 British pounds. Nonstop flight with SWISS. Leaves Zurich Airport at 5:00 PM on Friday, November 20 and arrives at Heathrow Airport at 5:50 PM on Friday, November 20. Total duration 1 hr 50 min.   Select flight",
+     "From 55 British pounds.This price does not include overhead bin access. Nonstop flight with easyJet. Leaves Zurich Airport at 8:00 PM on Friday, November 20 and arrives at London Gatwick Airport at 8:40 PM on Friday, November 20. Total duration 1 hr 40 min.   Select flight",
+     "From 56 British pounds.This price does not include overhead bin access. Nonstop flight with easyJet. Leaves Zurich Airport at 10:25 AM on Friday, November 20 and arrives at London Luton Airport at 11:15 AM on Friday, November 20. Total duration 1 hr 50 min.   Select flight",
+     "From 66 British pounds. Nonstop flight with British Airways. Leaves Zurich Airport at 6:15 AM on Friday, November 20 and arrives at Heathrow Airport at 7:10 AM on Friday, November 20. Total duration 1 hr 55 min.   Select flight",
+     "From 66 British pounds. Nonstop flight with British Airways. Leaves Zurich Airport at 9:10 PM on Friday, November 20 and arrives at Heathrow Airport at 9:55 PM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 74 British pounds. Nonstop flight with SWISS. Leaves Zurich Airport at 7:05 AM on Friday, November 20 and arrives at Heathrow Airport at 8:05 AM on Friday, November 20. Total duration 2 hr.   Select flight"
+    ]
+   },
+   "decisions": 19,
+   "decision_latency_ms": [
+    2039,
+    336,
+    269,
+    297,
+    283,
+    275,
+    492,
+    1482,
+    304,
+    301,
+    276,
+    356,
+    743,
+    313,
+    376,
+    280,
+    304,
+    309,
+    298
+   ],
+   "decision_model": "jev-1.13.0",
+   "actions": 13,
+   "text_calls": [
+    {
+     "field": "Where from?",
+     "value": "Zurich",
+     "latency_ms": 724
+    },
+    {
+     "field": "Where to? ",
+     "value": "London",
+     "latency_ms": 923
+    }
+   ]
+  },
+  {
+   "leg": "ds-prompt",
+   "round": 1,
+   "started": "2026-09-21T13:50:51+00:00",
+   "elapsed_ms": 2226,
+   "status": "predicted",
+   "error": "ValueError: Text helper returned no valid field value; nothing typed.",
+   "verification": {
+    "passed": false,
+    "checks": {
+     "search_page": false,
+     "one_way": false,
+     "origin": false,
+     "destination": false,
+     "date": false,
+     "year": false,
+     "results": false
+    },
+    "visible_flights": []
+   },
+   "decisions": 3,
+   "decision_latency_ms": [
+    1049,
+    1019,
+    1269
+   ],
+   "decision_model": "deepseek-flash",
+   "actions": 1,
+   "text_calls": []
+  },
+  {
+   "leg": "ds-json",
+   "round": 1,
+   "started": "2026-09-21T13:50:59+00:00",
+   "elapsed_ms": 33468,
+   "status": "done",
+   "error": null,
+   "verification": {
+    "passed": true,
+    "checks": {
+     "search_page": true,
+     "one_way": true,
+     "origin": true,
+     "destination": true,
+     "date": true,
+     "year": true,
+     "results": true
+    },
+    "visible_flights": [
+     "From 52 British pounds.This price does not include overhead bin access. Nonstop flight with easyJet. Leaves Zurich Airport at 10:45 AM on Friday, November 20 and arrives at London Gatwick Airport at 11:30 AM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 66 British pounds. Nonstop flight with British Airways. Leaves Zurich Airport at 7:45 PM on Friday, November 20 and arrives at Heathrow Airport at 8:30 PM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 74 British pounds. Nonstop flight with SWISS. Leaves Zurich Airport at 5:00 PM on Friday, November 20 and arrives at Heathrow Airport at 5:50 PM on Friday, November 20. Total duration 1 hr 50 min.   Select flight"
+    ]
+   },
+   "decisions": 24,
+   "decision_latency_ms": [
+    1322,
+    1125,
+    1039,
+    1242,
+    832,
+    962,
+    1331,
+    1096,
+    1021,
+    1395,
+    1035,
+    1289,
+    2334,
+    935,
+    1496,
+    1127,
+    1329,
+    1096,
+    1104,
+    904,
+    1255,
+    1155,
+    1273,
+    2248
+   ],
+   "decision_model": "deepseek-flash",
+   "actions": 12,
+   "text_calls": [
+    {
+     "field": "Where from?",
+     "value": "Zurich",
+     "latency_ms": 622
+    }
+   ]
+  },
+  {
+   "leg": "jev",
+   "round": 2,
+   "started": "2026-09-21T13:51:35+00:00",
+   "elapsed_ms": 16710,
+   "status": "done",
+   "error": null,
+   "verification": {
+    "passed": true,
+    "checks": {
+     "search_page": true,
+     "one_way": true,
+     "origin": true,
+     "destination": true,
+     "date": true,
+     "year": true,
+     "results": true
+    },
+    "visible_flights": [
+     "From 52 British pounds.This price does not include overhead bin access. Nonstop flight with easyJet. Leaves Zurich Airport at 10:45 AM on Friday, November 20 and arrives at London Gatwick Airport at 11:30 AM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 66 British pounds. Nonstop flight with British Airways. Leaves Zurich Airport at 7:45 PM on Friday, November 20 and arrives at Heathrow Airport at 8:30 PM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 74 British pounds. Nonstop flight with SWISS. Leaves Zurich Airport at 5:00 PM on Friday, November 20 and arrives at Heathrow Airport at 5:50 PM on Friday, November 20. Total duration 1 hr 50 min.   Select flight"
+    ]
+   },
+   "decisions": 23,
+   "decision_latency_ms": [
+    676,
+    1286,
+    271,
+    251,
+    509,
+    269,
+    463,
+    266,
+    467,
+    286,
+    842,
+    691,
+    1247,
+    1100,
+    310,
+    341,
+    334,
+    310,
+    307,
+    297,
+    681,
+    338,
+    297
+   ],
+   "decision_model": "jev-1.13.0",
+   "actions": 13,
+   "text_calls": [
+    {
+     "field": "Where from?",
+     "value": "Zurich",
+     "latency_ms": 833
+    },
+    {
+     "field": "Where to? ",
+     "value": "London",
+     "latency_ms": 767
+    }
+   ]
+  },
+  {
+   "leg": "ds-prompt",
+   "round": 2,
+   "started": "2026-09-21T13:51:54+00:00",
+   "elapsed_ms": 42919,
+   "status": "done",
+   "error": null,
+   "verification": {
+    "passed": true,
+    "checks": {
+     "search_page": true,
+     "one_way": true,
+     "origin": true,
+     "destination": true,
+     "date": true,
+     "year": true,
+     "results": true
+    },
+    "visible_flights": [
+     "From 52 British pounds.This price does not include overhead bin access. Nonstop flight with easyJet. Leaves Zurich Airport at 10:45 AM on Friday, November 20 and arrives at London Gatwick Airport at 11:30 AM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 66 British pounds. Nonstop flight with British Airways. Leaves Zurich Airport at 7:45 PM on Friday, November 20 and arrives at Heathrow Airport at 8:30 PM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 74 British pounds. Nonstop flight with SWISS. Leaves Zurich Airport at 5:00 PM on Friday, November 20 and arrives at Heathrow Airport at 5:50 PM on Friday, November 20. Total duration 1 hr 50 min.   Select flight"
+    ]
+   },
+   "decisions": 32,
+   "decision_latency_ms": [
+    1175,
+    990,
+    1419,
+    1105,
+    1472,
+    1184,
+    1118,
+    1036,
+    1124,
+    1020,
+    1004,
+    1202,
+    1242,
+    1192,
+    1377,
+    1288,
+    1331,
+    883,
+    897,
+    1133,
+    935,
+    1214,
+    1140,
+    2013,
+    972,
+    894,
+    1116,
+    1211,
+    1116,
+    1232,
+    1193,
+    1138
+   ],
+   "decision_model": "deepseek-flash",
+   "actions": 17,
+   "text_calls": [
+    {
+     "field": "Where else?",
+     "value": "London",
+     "latency_ms": 412
+    },
+    {
+     "field": "Where to? ",
+     "value": "London",
+     "latency_ms": 521
+    },
+    {
+     "field": "Where from? ",
+     "value": "Zurich",
+     "latency_ms": 488
+    },
+    {
+     "field": "Where to? ",
+     "value": "London",
+     "latency_ms": 667
+    }
+   ]
+  },
+  {
+   "leg": "ds-json",
+   "round": 2,
+   "started": "2026-09-21T13:52:39+00:00",
+   "elapsed_ms": 44888,
+   "status": "done",
+   "error": null,
+   "verification": {
+    "passed": true,
+    "checks": {
+     "search_page": true,
+     "one_way": true,
+     "origin": true,
+     "destination": true,
+     "date": true,
+     "year": true,
+     "results": true
+    },
+    "visible_flights": [
+     "From 52 British pounds.This price does not include overhead bin access. Nonstop flight with easyJet. Leaves Zurich Airport at 10:45 AM on Friday, November 20 and arrives at London Gatwick Airport at 11:30 AM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 66 British pounds. Nonstop flight with British Airways. Leaves Zurich Airport at 7:45 PM on Friday, November 20 and arrives at Heathrow Airport at 8:30 PM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 74 British pounds. Nonstop flight with SWISS. Leaves Zurich Airport at 5:00 PM on Friday, November 20 and arrives at Heathrow Airport at 5:50 PM on Friday, November 20. Total duration 1 hr 50 min.   Select flight"
+    ]
+   },
+   "decisions": 32,
+   "decision_latency_ms": [
+    2928,
+    833,
+    999,
+    1323,
+    1341,
+    879,
+    858,
+    1278,
+    852,
+    931,
+    1220,
+    2025,
+    1043,
+    1245,
+    2561,
+    1338,
+    1281,
+    1221,
+    1291,
+    1639,
+    1120,
+    1686,
+    1331,
+    840,
+    943,
+    923,
+    819,
+    1037,
+    1155,
+    1095,
+    1193,
+    979
+   ],
+   "decision_model": "deepseek-flash",
+   "actions": 15,
+   "text_calls": [
+    {
+     "field": "Where from?",
+     "value": "Zurich",
+     "latency_ms": 487
+    },
+    {
+     "field": "Where to? ",
+     "value": "London",
+     "latency_ms": 574
+    }
+   ]
+  },
+  {
+   "leg": "jev",
+   "round": 3,
+   "started": "2026-09-21T13:53:26+00:00",
+   "elapsed_ms": 13487,
+   "status": "done",
+   "error": null,
+   "verification": {
+    "passed": true,
+    "checks": {
+     "search_page": true,
+     "one_way": true,
+     "origin": true,
+     "destination": true,
+     "date": true,
+     "year": true,
+     "results": true
+    },
+    "visible_flights": [
+     "From 52 British pounds.This price does not include overhead bin access. Nonstop flight with easyJet. Leaves Zurich Airport at 10:45 AM on Friday, November 20 and arrives at London Gatwick Airport at 11:30 AM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 66 British pounds. Nonstop flight with British Airways. Leaves Zurich Airport at 7:45 PM on Friday, November 20 and arrives at Heathrow Airport at 8:30 PM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 74 British pounds. Nonstop flight with SWISS. Leaves Zurich Airport at 5:00 PM on Friday, November 20 and arrives at Heathrow Airport at 5:50 PM on Friday, November 20. Total duration 1 hr 50 min.   Select flight"
+    ]
+   },
+   "decisions": 22,
+   "decision_latency_ms": [
+    1928,
+    288,
+    300,
+    279,
+    297,
+    276,
+    254,
+    314,
+    671,
+    289,
+    274,
+    282,
+    350,
+    311,
+    332,
+    315,
+    277,
+    298,
+    294,
+    435,
+    308,
+    308
+   ],
+   "decision_model": "jev-1.13.0",
+   "actions": 13,
+   "text_calls": [
+    {
+     "field": "Where from?",
+     "value": "Zurich",
+     "latency_ms": 907
+    },
+    {
+     "field": "Where to? ",
+     "value": "London",
+     "latency_ms": 573
+    }
+   ]
+  },
+  {
+   "leg": "ds-prompt",
+   "round": 3,
+   "started": "2026-09-21T13:53:42+00:00",
+   "elapsed_ms": 86614,
+   "status": "done",
+   "error": null,
+   "verification": {
+    "passed": true,
+    "checks": {
+     "search_page": true,
+     "one_way": true,
+     "origin": true,
+     "destination": true,
+     "date": true,
+     "year": true,
+     "results": true
+    },
+    "visible_flights": [
+     "From 52 British pounds.This price does not include overhead bin access. Nonstop flight with easyJet. Leaves Zurich Airport at 10:45 AM on Friday, November 20 and arrives at London Gatwick Airport at 11:30 AM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 66 British pounds. Nonstop flight with British Airways. Leaves Zurich Airport at 7:45 PM on Friday, November 20 and arrives at Heathrow Airport at 8:30 PM on Friday, November 20. Total duration 1 hr 45 min.   Select flight",
+     "From 74 British pounds. Nonstop flight with SWISS. Leaves Zurich Airport at 5:00 PM on Friday, November 20 and arrives at Heathrow Airport at 5:50 PM on Friday, November 20. Total duration 1 hr 50 min.   Select flight"
+    ]
+   },
+   "decisions": 54,
+   "decision_latency_ms": [
+    2360,
+    998,
+    1139,
+    963,
+    1046,
+    1289,
+    863,
+    1421,
+    1042,
+    1231,
+    1345,
+    1247,
+    1758,
+    1307,
+    1257,
+    1391,
+    848,
+    1039,
+    1161,
+    1309,
+    1305,
+    1165,
+    1037,
+    988,
+    940,
+    854,
+    1242,
+    949,
+    846,
+    1037,
+    1228,
+    1130,
+    1070,
+    1185,
+    1114,
+    1225,
+    1161,
+    3565,
+    1045,
+    828,
+    707,
+    1263,
+    999,
+    991,
+    790,
+    1280,
+    1435,
+    1731,
+    1764,
+    1391,
+    1204,
+    1186,
+    2208,
+    1826
+   ],
+   "decision_model": "deepseek-flash",
+   "actions": 38,
+   "text_calls": [
+    {
+     "field": "Where to? ",
+     "value": "London",
+     "latency_ms": 711
+    },
+    {
+     "field": "Where to? ",
+     "value": "London",
+     "latency_ms": 547
+    },
+    {
+     "field": "Where else?",
+     "value": "London",
+     "latency_ms": 649
+    },
+    {
+     "field": "Where else?",
+     "value": "London",
+     "latency_ms": 731
+    },
+    {
+     "field": "Where else?",
+     "value": "London",
+     "latency_ms": 913
+    },
+    {
+     "field": "Where else?",
+     "value": "London",
+     "latency_ms": 651
+    },
+    {
+     "field": "Where else?",
+     "value": "London",
+     "latency_ms": 893
+    },
+    {
+     "field": "Where else?",
+     "value": "London",
+     "latency_ms": 2340
+    },
+    {
+     "field": "Where else?",
+     "value": "London",
+     "latency_ms": 452
+    },
+    {
+     "field": "Where else?",
+     "value": "London",
+     "latency_ms": 721
+    },
+    {
+     "field": "Where else?",
+     "value": "London",
+     "latency_ms": 1216
+    },
+    {
+     "field": "Where else?",
+     "value": "London",
+     "latency_ms": 722
+    },
+    {
+     "field": "Where to? ",
+     "value": "London",
+     "latency_ms": 572
+    },
+    {
+     "field": "Where from? ",
+     "value": "Zurich",
+     "latency_ms": 667
+    },
+    {
+     "field": "Where to? ",
+     "value": "London",
+     "latency_ms": 565
+    }
+   ]
+  },
+  {
+   "leg": "ds-json",
+   "round": 3,
+   "started": "2026-09-21T13:55:11+00:00",
+   "elapsed_ms": 29034,
+   "status": "done",
+   "error": null,
+   "verification": {
+    "passed": false,
+    "checks": {
+     "search_page": false,
+     "one_way": false,
+     "origin": false,
+     "destination": false,
+     "date": true,
+     "year": true,
+     "results": false
+    },
+    "visible_flights": []
+   },
+   "decisions": 21,
+   "decision_latency_ms": [
+    1340,
+    902,
+    1051,
+    1011,
+    1432,
+    996,
+    1264,
+    1083,
+    1291,
+    1299,
+    1051,
+    1281,
+    1349,
+    1276,
+    931,
+    1025,
+    1072,
+    1089,
+    1001,
+    2506,
+    1115
+   ],
+   "decision_model": "deepseek-flash",
+   "actions": 9,
+   "text_calls": [
+    {
+     "field": "Where from?",
+     "value": "Zurich",
+     "latency_ms": 604
+    },
+    {
+     "field": "Where to? ",
+     "value": "London",
+     "latency_ms": 439
+    }
+   ]
+  }
+ ]
+}

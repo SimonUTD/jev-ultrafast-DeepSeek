@@ -310,6 +310,19 @@ def test_text_helper_rejects_invalid_values(monkeypatch, content):
     monkeypatch.setattr(model, "post_json", Mock(return_value={"choices": [{"message": {"content": content}}]}))
     with pytest.raises(ValueError, match="nothing typed"):
         model.field_text({"goal": "Find a flight"})
+    # Two retries for the invalid output (DeepSeek json mode can return empty content).
+    assert model.post_json.call_count == 3
+
+
+def test_text_helper_recovers_on_retry(monkeypatch):
+    monkeypatch.setenv("TEXT_MODEL_API_KEY", "test")
+    responses = [
+        {"choices": [{"message": {"content": ""}}]},  # json mode empty-content caveat
+        {"choices": [{"message": {"content": '{"text":"Zurich"}'}}]},
+    ]
+    monkeypatch.setattr(model, "post_json", Mock(side_effect=responses))
+    assert model.field_text({"goal": 'Enter "Zurich"'})[0] == "Zurich"
+    assert model.post_json.call_count == 2
 
 
 def test_navigation_during_prediction_reobserves_without_action(runner):
@@ -318,3 +331,184 @@ def test_navigation_during_prediction_reobserves_without_action(runner):
     assert runner.state["status"] == "ready"
     assert runner.state["decision"] is None
     runner.state["browser"].act.assert_not_called()
+
+
+def deepseek_post(capture, content_fn):
+    def post(_url, _key, body):
+        capture.append((_url, body))
+        questions = json.loads(body["messages"][1]["content"])["questions"]
+        return {
+            "model": "deepseek-flash",
+            "choices": [{"message": {"content": content_fn(questions)}}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 5},
+        }
+
+    return post
+
+
+def test_deepseek_decides_in_one_request_with_thinking_off(monkeypatch):
+    capture = []
+
+    def content(questions):
+        return json.dumps({qid: choice(list(q["criteria"]), list(q["criteria"])[0]) for qid, q in questions.items()})
+
+    monkeypatch.setenv("DECISION_PROVIDER", "deepseek")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test")
+    monkeypatch.setattr(model, "post_json", deepseek_post(capture, content))
+    d = model.choose(page(), "Find a book", [])
+    url, request = capture[0]
+    assert len(capture) == 1 and url == "https://api.deepseek.com/v1/chat/completions"
+    assert request["model"] == "deepseek-flash" and request["thinking"] == {"type": "disabled"}
+    assert "response_format" not in request  # prompt mode relies on the system prompt only
+    assert request["messages"][0]["role"] == "system" and "json" in request["messages"][0]["content"]
+    assert set(json.loads(request["messages"][1]["content"])["questions"]) == {
+        "operation", "click_target", "type_text_target"
+    }
+    assert d["operation"] == "TYPE_TEXT" and d["choice"] == "e1"
+    assert d["target"] == "1" and d["model"] == "deepseek-flash"
+
+
+def test_deepseek_json_mode_sets_response_format(monkeypatch):
+    capture = []
+
+    def content(questions):
+        return json.dumps({qid: choice(list(q["criteria"]), list(q["criteria"])[0]) for qid, q in questions.items()})
+
+    monkeypatch.setenv("DECISION_PROVIDER", "deepseek")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test")
+    monkeypatch.setenv("DEEPSEEK_OUTPUT", "json")
+    monkeypatch.setattr(model, "post_json", deepseek_post(capture, content))
+    model.choose(page(), "Find a book", [])
+    request = capture[0][1]
+    assert request["response_format"] == {"type": "json_object"}
+    assert "json" in request["messages"][0]["content"]  # DeepSeek json mode requires the word json in the prompt
+
+
+@pytest.mark.parametrize(
+    "content", ['```json\n{"operation": 1}\n```', 'Sure!\n{"operation": 2}\nDone.']
+)
+def test_parse_json_object_tolerates_fences_and_prose(content):
+    assert model.parse_json_object(content)["operation"] in (1, 2)
+
+
+def test_deepseek_invalid_candidate_is_rejected(monkeypatch):
+    def content(questions):
+        answers = {qid: choice(list(q["criteria"]), list(q["criteria"])[0]) for qid, q in questions.items()}
+        answers["operation"]["choice"] = "invented"
+        return json.dumps(answers)
+
+    monkeypatch.setenv("DECISION_PROVIDER", "deepseek")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test")
+    monkeypatch.setattr(model, "post_json", deepseek_post([], content))
+    with pytest.raises(ValueError, match="Invalid DeepSeek"):
+        model.choose(page(), "Find a book", [])
+
+
+def test_deepseek_invented_candidate_is_retried_once(monkeypatch):
+    calls = []
+
+    def content(questions):
+        answers = {qid: choice(list(q["criteria"]), list(q["criteria"])[0]) for qid, q in questions.items()}
+        if not calls:
+            answers["operation"]["choice"] = "invented"
+        calls.append(1)
+        return json.dumps(answers)
+
+    def post(_url, _key, body):
+        questions = json.loads(body["messages"][1]["content"])["questions"]
+        return {
+            "model": "deepseek-flash",
+            "choices": [{"message": {"content": content(questions)}}],
+            "usage": {},
+        }
+
+    monkeypatch.setenv("DECISION_PROVIDER", "deepseek")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test")
+    monkeypatch.setattr(model, "post_json", post)
+    d = model.choose(page(), "Find a book", [])
+    assert len(calls) == 2 and d["choice"] == "e1"
+    assert d["retry_reasons"][0]["reason"] == "choice_not_offered"  # failures stay visible
+
+
+def test_deepseek_format_failures_are_reported_not_hidden(monkeypatch):
+    def content(questions):
+        answers = {}
+        for qid, q in questions.items():
+            ids = list(q["criteria"])
+            answers[qid] = {
+                "choice": ids[0],
+                "probabilities": {ids[0]: 0.7},  # missing candidates, sum drifts to 0.70
+                "confidence": 0.9,
+            }
+        return json.dumps(answers)
+
+    monkeypatch.setenv("DECISION_PROVIDER", "deepseek")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test")
+    monkeypatch.setattr(model, "post_json", deepseek_post([], content))
+    d = model.choose(page(), "Find a book", [])
+    assert d["choice"] == "e1" and d["conditioning"]["operation"] == [
+        "missing_candidates", "probabilities_sum:0.70"
+    ]
+
+
+def test_text_helper_falls_back_to_the_deepseek_key_and_keeps_thinking_off(monkeypatch):
+    monkeypatch.delenv("TEXT_MODEL_API_KEY", raising=False)
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "shared")
+    monkeypatch.setenv("TEXT_MODEL_REASONING", "none")  # OpenRouter-only knob must not leak to DeepSeek
+    monkeypatch.setenv("TEXT_MODEL_BASE_URL", "https://api.deepseek.com/v1")
+    post = Mock(return_value={"choices": [{"message": {"content": '{"text":"Zurich"}'}}]})
+    monkeypatch.setattr(model, "post_json", post)
+    assert model.field_text({"goal": 'Enter "Zurich"'})[0] == "Zurich"
+    body = post.call_args.args[2]
+    assert post.call_args.args[1] == "shared"
+    assert body["model"] == "deepseek-flash" and body["thinking"] == {"type": "disabled"}
+
+
+def test_deepseek_unparsable_output_is_retried_then_fails(monkeypatch):
+    capture = []
+
+    def content(questions):
+        return "not json at all"
+
+    monkeypatch.setenv("DECISION_PROVIDER", "deepseek")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test")
+    monkeypatch.setattr(model, "post_json", deepseek_post(capture, content))
+    with pytest.raises(ValueError, match="no parsable decision json"):
+        model.choose(page(), "Find a book", [])
+    assert len(capture) == 3  # two retries for unparsable output, then a hard stop
+
+
+def test_deepseek_needs_a_key(monkeypatch):
+    monkeypatch.setenv("DECISION_PROVIDER", "deepseek")
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    post = Mock()
+    monkeypatch.setattr(model, "post_json", post)
+    with pytest.raises(RuntimeError, match="DEEPSEEK_API_KEY"):
+        model.choose(page(), "Find a book", [])
+    post.assert_not_called()
+
+
+def test_repair_choice_normalizes_a_drifting_partial_distribution():
+    answer, issues = model.repair_choice(
+        {"choice": "b", "probabilities": {"a": 0.6, "b": 0.35}, "confidence": 5}, {"a", "b", "c"}
+    )
+    assert set(answer["probabilities"]) == {"a", "b", "c"}  # missing candidate filled with 0
+    assert abs(sum(answer["probabilities"].values()) - 1) < 1e-9  # renormalized to exactly 1
+    assert answer["probabilities"]["b"] > answer["probabilities"]["a"]  # max aligned with the choice
+    assert answer["confidence"] == answer["probabilities"]["b"]  # invalid confidence falls back
+    assert "missing_candidates" in issues  # every raw format failure is recorded
+    assert any(i.startswith("probabilities_sum:") for i in issues)
+    assert "invalid_confidence" in issues
+
+
+def test_repair_choice_falls_back_to_one_hot_without_numbers():
+    answer, issues = model.repair_choice({"choice": "a", "probabilities": {"a": "high"}}, {"a", "b"})
+    assert answer["probabilities"] == {"a": 1.0, "b": 0.0}
+    assert "no_valid_probability_mass" in issues and "invalid_probability_values" in issues
+    assert "missing_candidates" in issues  # absent candidates are reported as missing, not invalid
+
+
+def test_repair_choice_never_converts_an_invented_candidate():
+    answer, issues = model.repair_choice({"choice": "zz", "probabilities": {}}, {"a"})
+    assert answer is None and issues == ["choice_not_offered:'zz'"]
+    assert model.repair_choice("not a dict", {"a"})[0] is None

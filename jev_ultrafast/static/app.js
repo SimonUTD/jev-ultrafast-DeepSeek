@@ -68,6 +68,7 @@ async function perform(fn, label) {
 }
 function render() {
   if (!state) return;
+  $("model-tag").innerHTML = `${escape(state.decision_model || "jev-latest")} <span>+ text helper</span>`;
   $("helper").textContent = `Text helper · ${state.text_model}`;
   $("plan").innerHTML = (state.plan || [])
     .map(
@@ -83,7 +84,7 @@ function render() {
     idle: "Ready to explore",
     ready: "Page observed · ready for a decision",
     predicted: "Choice ready · inspect or execute",
-    done: "Jev reports complete · inspect the page",
+    done: "Model reports complete · inspect the page",
     blocked: "Stopped · no supported next action",
   };
   $("status").textContent = labels[state.status] || state.status;
@@ -104,7 +105,7 @@ function render() {
   $("latency").textContent = d ? `${d.latency_ms} ms` : "—";
   $("confidence").textContent = d?.target_confidence != null ? percent(d.target_confidence) : "—";
   $("completion").textContent = d ? d.operation : "—";
-  $("ranking-note").textContent = d ? "Ranked by Jev" : "Unranked";
+  $("ranking-note").textContent = d ? `Ranked by ${state.decision_model || "Jev"}` : "Unranked";
   const op = Object.entries(d?.operation_probabilities || {}).sort((a,b)=>b[1]-a[1]);
   $("operation-choices").innerHTML = op.map(([name,p]) =>
     `<span class="operation-choice ${name === d.operation ? 'best' : ''}">${escape(name)} <b>${percent(p)}</b></span>`).join('');
@@ -158,7 +159,7 @@ $("scenario").addEventListener("change", () => {
   $("goal").value = goals[$("scenario").value];
 });
 $("choose").addEventListener("click", () =>
-  perform(() => call("predict"), "Jev is comparing the actions…"),
+  perform(() => call("predict"), `${state.decision_model || "Jev"} is comparing the actions…`),
 );
 $("execute").addEventListener("click", () =>
   perform(

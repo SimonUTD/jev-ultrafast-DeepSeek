@@ -29,9 +29,21 @@ def load_environment():
                 os.environ.setdefault(key, value)
 
 
+def decision_model():
+    if os.environ.get("DECISION_PROVIDER", "typesafe").strip().lower() == "deepseek":
+        output = os.environ.get("DEEPSEEK_OUTPUT", "prompt").strip().lower()
+        return os.environ.get("DECISION_MODEL", "deepseek-flash") + (f" ({output})" if output == "json" else "")
+    return os.environ.get("TYPESAFE_MODEL", "jev-latest")
+
+
 def response_state():
     state = AGENT.snapshot() if AGENT else {"page": None, "status": "idle", "history": [], "decision": None}
-    return {**state, "text_model": os.environ.get("TEXT_MODEL", "deepseek-chat"), "max_steps": MAX_STEPS}
+    return {
+        **state,
+        "decision_model": decision_model(),
+        "text_model": os.environ.get("TEXT_MODEL", "deepseek-flash"),
+        "max_steps": MAX_STEPS,
+    }
 
 
 def close_browser():

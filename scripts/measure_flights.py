@@ -61,7 +61,10 @@ finally:
     state["task_hash"] = hashlib.sha256(json.dumps([URL, GOALS]).encode()).hexdigest()
     state["configuration"] = {
         key: os.environ.get(key)
-        for key in ("TYPESAFE_MODEL", "TEXT_MODEL", "TEXT_MODEL_BASE_URL", "TEXT_MODEL_REASONING")
+        for key in (
+            "DECISION_PROVIDER", "DECISION_MODEL", "DEEPSEEK_OUTPUT", "DEEPSEEK_BASE_URL",
+            "TYPESAFE_MODEL", "TEXT_MODEL", "TEXT_MODEL_BASE_URL", "TEXT_MODEL_REASONING",
+        )
     }
     state["browser_version"] = agent.browser.call("Browser.getVersion")["product"]
     state["final_page"] = final
